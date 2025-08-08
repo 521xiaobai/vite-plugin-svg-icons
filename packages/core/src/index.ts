@@ -26,6 +26,7 @@ export function createSvgIconsPlugin(opt: ViteSvgIconsPlugin): Plugin {
   const cache = new Map<string, FileStats>()
 
   let isBuild = false
+  let buildCache: Awaited<ReturnType<typeof createModuleCode>> | null = null
   const options = {
     svgoOptions: true,
     symbolId: 'icon-[dir]-[name]',
@@ -70,11 +71,15 @@ export function createSvgIconsPlugin(opt: ViteSvgIconsPlugin): Plugin {
         return `export default {}`
       }
 
-      const { code, idSet } = await createModuleCode(
-        cache,
-        svgoOptions as OptimizeOptions,
-        options,
-      )
+      if (!buildCache) {
+        buildCache = await createModuleCode(
+          cache,
+          svgoOptions as OptimizeOptions,
+          options,
+        )
+      }
+
+      const { code, idSet } = buildCache
       if (isRegister) {
         return code
       }
